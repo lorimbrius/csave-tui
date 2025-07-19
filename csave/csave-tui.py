@@ -98,7 +98,7 @@ def select_directories_to_back_up(selected_dirs):
     
     print(items)
 
-    code, tags = d.buildlist(message, items=items, title=title, backtitle=BACK_TITLE)
+    code, tags = d.buildlist(message, items=items, title=title, backtitle=BACK_TITLE, no_collapse=True)
 
     return tags if code == Dialog.OK else selected_dirs
 
@@ -140,6 +140,22 @@ def tape_mode_menu(tape_mode):
     else:
         return 'a' if tag == 'Append' else 'o'
 
+def final_confirmation(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
+    title    = "Final Confirmation"
+    message  = "Please review the following. Press OK to start backup or Cancel to return to backup menu."
+    elements = [
+        # (label,         yl, xl, item,                                           yi, xi, field_length, input_length)
+        ("Backup mode",   1,  1,   backup_mode,                                   1,  15,  0,            0),
+        ("Block size",    2,  1,   str(block_size),                               2,  15,  0,            0),
+        ("Auto eject",    3,  1,   "Yes" if auto_eject else "No",                 3,  15,  0,            0),
+        ("Tape mode",     4,  1,   "Append" if tape_mode == 'a' else "Overwrite", 4,  15,  0,            0),
+        ("Selected dirs", 5,  1,   str(selected_dirs),                            5,  15,  0,            0)
+    ]
+
+    code, _ = d.form(message, elements, title=title, backtitle=BACK_TITLE)
+
+    return code == Dialog.OK
+
 if __name__ == "__main__":
     backup_mode       = "Full"                    # full or differential backup
     block_size        = 512                       # tape block size
@@ -151,10 +167,14 @@ if __name__ == "__main__":
 
     code = None
 
-    while code not in [Dialog.CANCEL, Dialog.ESC, Dialog.EXTRA]:
+    while True:
         code, backup_mode, block_size, auto_eject, tape_mode, selected_dirs = backup_config_menu(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
 
-    if code == Dialog.EXTRA:
-        start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
+        if code == Dialog.EXTRA:
+            confirmed = final_confirmation(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
 
-    os._exit(0)
+            if confirmed:
+                start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
+        
+        if code in [Dialog.CANCEL, Dialog.ESC]:
+            os._exit(0)
