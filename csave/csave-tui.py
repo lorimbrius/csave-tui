@@ -1,8 +1,9 @@
 import os
 from fs_utils import generate_dataset_list, make_directories_list
+from csave import start_backup
 
 # Globals
-BACK_TITLE        = "CSave"                   # program title
+BACK_TITLE = "CSave" # program title
 
 # Initialize dialog
 from dialog import Dialog
@@ -19,10 +20,13 @@ def backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs):
         ("Eject when finished", "Yes" if auto_eject else "No"),
         ("Directories to back up...", '')
     ]
-    
-    code, tag = d.menu(message, choices=choices, title=title, backtitle=BACK_TITLE)
 
-    if code in [Dialog.CANCEL, Dialog.ESC]:
+    ok_label    = "Edit Selected Option"
+    extra_label = "Start Backup"
+    
+    code, tag = d.menu(message, choices=choices, title=title, backtitle=BACK_TITLE, ok_label=ok_label, extra_button=True, extra_label=extra_label)
+
+    if code in [Dialog.CANCEL, Dialog.ESC, Dialog.EXTRA]:
         return (code, backup_mode, block_size, auto_eject, selected_dirs)
 
     match tag.lower():
@@ -96,7 +100,10 @@ if __name__ == "__main__":
 
     code = None
 
-    while code not in [Dialog.CANCEL, Dialog.ESC]:
+    while code not in [Dialog.CANCEL, Dialog.ESC, Dialog.EXTRA]:
         code, backup_mode, block_size, auto_eject, selected_dirs = backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs)
+
+    if code == Dialog.EXTRA:
+        start_backup(backup_mode, block_size, auto_eject, selected_dirs)
 
     os._exit(0)
