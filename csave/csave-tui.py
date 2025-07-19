@@ -11,7 +11,7 @@ from dialog import Dialog
 
 d = Dialog()
 
-def backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs):
+def backup_config_menu(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
     title   = "Backup Configuration"
     message = "Please review the following:"
     choices = [
@@ -19,6 +19,7 @@ def backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs):
         ("Backup mode",         backup_mode),
         ("Block size",          str(block_size)),
         ("Eject when finished", "Yes" if auto_eject else "No"),
+        ("Tape mode",           "Append" if tape_mode == 'a' else "Overwrite"),
         ("Directories to back up...", '')
     ]
 
@@ -36,7 +37,7 @@ def backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs):
                        extra_label=extra_label)
 
     if code in [Dialog.CANCEL, Dialog.ESC, Dialog.EXTRA]:
-        return (code, backup_mode, block_size, auto_eject, selected_dirs)
+        return (code, backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
 
     match tag.lower():
         case "backup mode":
@@ -45,10 +46,12 @@ def backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs):
             block_size = enter_block_size(block_size)
         case "eject when finished":
             auto_eject = select_auto_eject(auto_eject)
+        case "tape mode":
+            tape_mode = tape_mode_menu(tape_mode)
         case "directories to back up...":
             selected_dirs = select_directories_to_back_up(selected_dirs)
 
-    return (code, backup_mode, block_size, auto_eject, selected_dirs)
+    return (code, backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
 
 def select_backup_mode(backup_mode):
     title   = "Backup Mode"
@@ -99,9 +102,9 @@ def select_directories_to_back_up(selected_dirs):
 
     return tags if code == Dialog.OK else selected_dirs
 
-def start_backup(backup_mode, block_size, auto_eject, selected_dirs):
+def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
     ### DEBUG
-    print(f"backup_mode: {backup_mode}\nblock_size: {block_size}\nauto_eject: {auto_eject}\nselected_dirs: {selected_dirs}")
+    print(f"backup_mode: {backup_mode}\nblock_size: {block_size}\nauto_eject: {auto_eject}\ntape_mode: {tape_mode}\nselected_dirs: {selected_dirs}")
 
     # Block until the tape is loaded
     load_tape()
@@ -120,10 +123,28 @@ def load_tape():
             d.msgbox(mt_proc.stderr.read().decode(), title=title, backtitle=BACK_TITLE)
             os._exit(mt_proc.returncode)
 
+def tape_mode_menu(tape_mode):
+    title   = "Tape Mode"
+    message = "Select tape mode:"
+    width   = 70
+    choices = [
+        # (tag,       item,                                        status)
+        ('Append',    'Append this backup to the end of the tape', tape_mode == 'a'),
+        ('Overwrite', 'Overwrite the tape with this backup',       tape_mode == 'o')
+    ]
+
+    code, tag = d.radiolist(message, choices=choices, width=width, title=title, backtitle=BACK_TITLE)
+
+    if code in [Dialog.CANCEL, Dialog.ESC]:
+        return tape_mode
+    else:
+        return 'a' if tag == 'Append' else 'o'
+
 if __name__ == "__main__":
     backup_mode       = "Full"                    # full or differential backup
     block_size        = 512                       # tape block size
     auto_eject        = True                      # eject tape when finished
+    tape_mode         = 'o'                       # overwrite by default
     selected_dirs     = make_directories_list()   # directories to back up
 
     generate_dataset_list()
@@ -131,9 +152,9 @@ if __name__ == "__main__":
     code = None
 
     while code not in [Dialog.CANCEL, Dialog.ESC, Dialog.EXTRA]:
-        code, backup_mode, block_size, auto_eject, selected_dirs = backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs)
+        code, backup_mode, block_size, auto_eject, tape_mode, selected_dirs = backup_config_menu(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
 
     if code == Dialog.EXTRA:
-        start_backup(backup_mode, block_size, auto_eject, selected_dirs)
+        start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
 
     os._exit(0)
