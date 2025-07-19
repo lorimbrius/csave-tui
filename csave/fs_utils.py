@@ -12,9 +12,5 @@ def generate_dataset_list():
             f_dataset_list.write(f"{fs}\n")
 
 def make_directories_list():
-    directories = []
-    
     with open(DATASET_LIST, 'r', encoding="utf-8") as f_dataset_list:
-        directories = f_dataset_list.readlines()
-        
-    return directories
+        return [line.strip('\n') for line in f_dataset_list]

@@ -40,13 +40,14 @@ def backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs):
 def select_backup_mode(backup_mode):
     title   = "Backup Mode"
     message = "Select backup mode:"
+    width   = 90 
     choices = [
         # (tag,          item,                                                         status)
         ("Full",         "Back up all files, regardless of last change date",          backup_mode.lower() == "full"),
         ("Differential", "Only back up files that have changed since the last backup", backup_mode.lower() == "differential")
     ]
 
-    code, tag = d.radiolist(message, choices=choices, title=title, backtitle=BACK_TITLE)
+    code, tag = d.radiolist(message, width=width, choices=choices, title=title, backtitle=BACK_TITLE)
 
     return tag if code == Dialog.OK else backup_mode
 
@@ -68,9 +69,19 @@ def select_auto_eject(auto_eject):
 
 def select_directories_to_back_up(selected_dirs):
     title   = "Select Directories"
-    message = "Select directories to back up:"
-    items   = [(dir, None, True if dir in selected_dirs else False) for dir in make_directories_list()]
+    message = """ Select directories to back up:
+
+    Keys: SPACE     to select or deselect the highlighted item
+          ^         to move the focus to the left list (unselected items)
+          $         to move the focus to the right list (selected items)
+          TAB       to toggle focus between left and right lists
+          ENTER     to press the focused button (OK or Cancel)
+    """ 
+
+    items   = [(dir, dir, True if dir in selected_dirs else False) for dir in make_directories_list()]
     
+    print(items)
+
     code, tags = d.buildlist(message, items=items, title=title, backtitle=BACK_TITLE)
 
     return tags if code == Dialog.OK else selected_dirs
