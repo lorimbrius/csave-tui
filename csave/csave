@@ -93,7 +93,7 @@ load_tape () {
 
   rc=$?
   if [ $rc -ne 0 ]; then
-    echo "Tape error; aborting"
+    echo "Tape error; aborting."
     exit $rc
   fi
 

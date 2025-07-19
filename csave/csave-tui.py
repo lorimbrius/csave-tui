@@ -1,6 +1,7 @@
 import os
 from fs_utils import generate_dataset_list, make_directories_list
-from csave import start_backup
+import subprocess
+from subprocess import Popen
 
 # Globals
 BACK_TITLE = "CSave" # program title
@@ -21,10 +22,18 @@ def backup_config_menu(backup_mode, block_size, auto_eject, selected_dirs):
         ("Directories to back up...", '')
     ]
 
-    ok_label    = "Edit Selected Option"
-    extra_label = "Start Backup"
+    ok_label     = "Edit Selected Option"
+    cancel_label = "Exit"
+    extra_label  = "Start Backup"
     
-    code, tag = d.menu(message, choices=choices, title=title, backtitle=BACK_TITLE, ok_label=ok_label, extra_button=True, extra_label=extra_label)
+    code, tag = d.menu(message,
+                       choices=choices,
+                       title=title,
+                       backtitle=BACK_TITLE,
+                       ok_label=ok_label,
+                       cancel_label=cancel_label,
+                       extra_button=True,
+                       extra_label=extra_label)
 
     if code in [Dialog.CANCEL, Dialog.ESC, Dialog.EXTRA]:
         return (code, backup_mode, block_size, auto_eject, selected_dirs)
@@ -89,6 +98,27 @@ def select_directories_to_back_up(selected_dirs):
     code, tags = d.buildlist(message, items=items, title=title, backtitle=BACK_TITLE)
 
     return tags if code == Dialog.OK else selected_dirs
+
+def start_backup(backup_mode, block_size, auto_eject, selected_dirs):
+    ### DEBUG
+    print(f"backup_mode: {backup_mode}\nblock_size: {block_size}\nauto_eject: {auto_eject}\nselected_dirs: {selected_dirs}")
+
+    # Block until the tape is loaded
+    load_tape()
+
+def load_tape():
+    title   = "Load Tape"
+    message = "Please insert a tape."
+
+    d.msgbox(message, title=title, backtitle=BACK_TITLE)
+
+    with Popen(["mt", "status"], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) as mt_proc:
+        mt_proc.wait()
+
+        if mt_proc.returncode != 0:
+            title = "Tape Error"
+            d.msgbox(mt_proc.stderr.read().decode(), title=title, backtitle=BACK_TITLE)
+            os._exit(mt_proc.returncode)
 
 if __name__ == "__main__":
     backup_mode       = "Full"                    # full or differential backup
