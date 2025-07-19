@@ -1,0 +1,208 @@
+#!/bin/sh
+#
+# CSave, a tape backup script
+#
+
+# Variables
+BLOCK_SIZE=512
+FSLIST=/root/filesystem.usage
+DATASET_LIST=/usr/local/etc/dumplist
+LASTDUMP_SENTINEL=/var/preserve/lastdump
+AUTO_EJECT=Y
+
+# Functions
+generate_dataset_list () {
+  cut -f 2 $FSLIST > $DATASET_LIST
+}
+
+backup_config_menu () {
+  directories=`tr '\n' ' ' < "$DATASET_LIST"`
+
+  echo "* Backup Configuration *
+  Backup mode: $backup_mode
+  Tape block size: $BLOCK_SIZE
+  Eject when finished: $AUTO_EJECT
+  Directories to back up: $directories"
+
+  read -p "Does all of that look correct? " choice
+
+  case $choice in
+    ([Nn]|[Nn][Oo]*)
+      read -p "Backup mode is $backup_mode. Change backup mode? " backup_mode_choice
+
+      case $backup_mode_choice in 
+        [Yy]*)
+          main_menu
+          ;;
+        *)
+          :
+          ;;
+      esac
+
+      read -p "Tape block size is $BLOCK_SIZE. Change tape block size? " tape_block_size_choice
+
+      case $tape_block_size_choice in 
+        [Yy]*)
+          read -p "Enter tape block size: " BLOCK_SIZE
+          ;;
+        *)
+          :
+          ;;
+      esac
+
+      read -p "Directories to back up are $directories. Change list? " directories_choice
+
+      case $directories_choice in
+        [Yy]*)
+          $EDITOR "$DATASET_LIST"
+          ;;
+        *)
+          :
+          ;;
+      esac
+
+      ask_auto_eject () {
+	      read -p "Automatically eject tape when finished? (Y/N): " auto_eject_choice
+	      
+	      case $auto_eject_choice in
+		([Yy]|[Yy][Ee][Ss])
+		  AUTO_EJECT=Y
+		  ;;
+		([Nn]|[Nn][Oo])
+		  AUTO_EJECT=N
+		  ;;
+		*)
+		  echo "Please type Y or N"
+		  ask_auto_eject
+		  ;;
+	      esac
+      }
+
+      ask_auto_eject
+      backup_config_menu
+      ;;
+    *)
+      :
+      ;;
+  esac
+}
+
+load_tape () {
+  read -p "Please insert a tape" _
+  mt status > /dev/null
+
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo "Tape error; aborting"
+    exit $rc
+  fi
+
+  tape_mode_menu () {
+	  echo "* Tape Mode *
+	  (a) Append
+	  (o) Overwrite
+
+	  "
+
+	  read -p "Enter a to append to end of tape or o to overwrite tape. " append_overwrite
+	  
+	  case $append_overwrite in
+	    a)
+	      mt eod
+	      ;;
+	    o)
+	      :
+	      ;;
+	    *)
+	      echo "Please enter a or o"
+	      tape_mode_menu
+	      ;;
+	  esac
+  }
+
+  tape_mode_menu
+}
+
+final_confirmation () {
+  read -p 'Press enter to start backup or Ctrl+C to abort.' _
+}
+
+do_backup() {
+  if [ "$backup_mode" = "differential" ]; then
+    newer_mtime_arg="--newer-mtime ${lastdump_date}"
+  else
+    newer_mtime_arg=""
+  fi
+
+  for directory in $directories; do
+    (
+      cd "$directory"
+      echo "Backing up $directory"
+      tar c -b$BLOCK_SIZE --totals --one-file-system --exclude .zfs/ $newer_mtime_arg .
+    )
+  done
+
+  # update lastdump sentinel
+  touch $LASTDUMP_SENTINEL
+
+  if [ "$AUTO_EJECT" = "Y" ]; then
+    mt offl
+  fi
+}
+  
+full_backup () {
+  backup_mode=full
+}
+
+differential_backup() {
+  backup_mode=differential
+  lastdump_date=`stat -f %Sm $LASTDUMP_SENTINEL`
+
+  echo "* Differential Backup *
+  Last backup was at $lastdump_date. Is that correct?"
+
+  read choice
+
+  case $choice in
+      ([Nn]|[Nn][Oo]*)
+        read -p "Enter date to use as a differential base: " lastdump_date
+        ;;
+      *)
+        :
+        ;;
+  esac
+}
+
+main_menu () {
+  echo '* CSave Menu *
+
+  Select one
+  (f) Full backup
+  (d) Differential backup
+  (q) Quit'
+
+  read choice
+
+  case $choice in
+    f)
+        full_backup
+        ;;
+    d)
+        differential_backup
+        ;;
+    q)
+        exit 0
+        ;;
+    *)
+        echo "Please type f, d, or q"
+        main_menu
+        ;;
+  esac
+}
+
+generate_dataset_list
+main_menu
+backup_config_menu
+load_tape
+final_confirmation
+do_backup
