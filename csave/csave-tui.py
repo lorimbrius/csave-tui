@@ -129,7 +129,6 @@ def confirm_lastdump_mtime():
 
     return string
 
-
 def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
     ### DEBUG
     print(f"backup_mode: {backup_mode}\nblock_size: {block_size}\nauto_eject: {auto_eject}\ntape_mode: {tape_mode}\nselected_dirs: {selected_dirs}")
