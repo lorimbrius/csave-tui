@@ -170,7 +170,7 @@ def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
 
                 # This will not block - a programbox would
                 d.progressbox(fd=tar_proc.stdout.fileno,
-                              text=render_already_backed_up + f"\n\n{message}",
+                              text=render_already_backed_up() + f"\n\n{message}",
                               title=f"Backing up {dir}",
                               backtitle=BACK_TITLE)
 
