@@ -174,6 +174,8 @@ def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
                               title=f"Backing up {dir}",
                               backtitle=BACK_TITLE)
 
+                tape_proc_follow(tar_proc)
+
         if backup_mode.lower() == 'full':
             update_lastdump_sentinel()
             
