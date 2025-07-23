@@ -7,10 +7,10 @@
 #
 
 import os
-from fs_utils import generate_dataset_list, get_lastdump_mtime, make_directories_list, update_lastdump_sentinel
 import subprocess
 import datetime
 from subprocess import Popen
+from fs_utils import generate_dataset_list, get_lastdump_mtime, make_directories_list, update_lastdump_sentinel
 
 # Globals
 BACK_TITLE = "CSave" # program title
@@ -35,6 +35,7 @@ def backup_config_menu(backup_mode, block_size, auto_eject, tape_mode, selected_
     ok_label     = "Edit Selected Option"
     cancel_label = "Exit"
     extra_label  = "Start Backup"
+
     code, tag = d.menu(message,
                        choices=choices,
                        title=title,
@@ -71,7 +72,11 @@ def select_backup_mode(backup_mode):
         ("Differential", "Only back up files that have changed since the last backup", backup_mode.lower() == "differential")
     ]
 
-    code, tag = d.radiolist(message, width=width, choices=choices, title=title, backtitle=BACK_TITLE)
+    code, tag = d.radiolist(message,
+                            width=width,
+                            choices=choices,
+                            title=title,
+                            backtitle=BACK_TITLE)
 
     return tag if code == Dialog.OK else backup_mode
 
@@ -102,9 +107,14 @@ def select_directories_to_back_up(selected_dirs):
           ENTER     to press the focused button (OK or Cancel)
     """ 
 
-    items   = [(dir, dir, True if dir in selected_dirs else False) for dir in make_directories_list()]
+    items = [(dir, dir, True if dir in selected_dirs else False) for dir in make_directories_list()]
     
-    code, tags = d.buildlist(message, items=items, title=title, backtitle=BACK_TITLE, no_collapse=True)
+    # no_collapse prevents collapsing whitespace in the message
+    code, tags = d.buildlist(message,
+                             items=items,
+                             title=title,
+                             backtitle=BACK_TITLE,
+                             no_collapse=True)
 
     return tags if code == Dialog.OK else selected_dirs
 
@@ -159,13 +169,18 @@ def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
                 cwd=dir) as tar_proc:
 
                 # This will not block - a programbox would
-                d.progressbox(fd=tar_proc.stdout.fileno, text=render_already_backed_up + f"\n\n{message}", title=f"Backing up {dir}", backtitle=BACK_TITLE)
+                d.progressbox(fd=tar_proc.stdout.fileno,
+                              text=render_already_backed_up + f"\n\n{message}",
+                              title=f"Backing up {dir}",
+                              backtitle=BACK_TITLE)
 
         update_lastdump_sentinel()
 
     finally:
         if auto_eject:
-            with Popen(["mt", "offl"], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) as mt_proc:
+            with Popen(["mt", "offl"],
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.PIPE) as mt_proc:
                 tape_proc_follow(mt_proc)
 
 def load_tape():
@@ -187,7 +202,11 @@ def tape_mode_menu(tape_mode):
         ('Overwrite', 'Overwrite the tape with this backup',       tape_mode == 'o')
     ]
 
-    code, tag = d.radiolist(message, choices=choices, width=width, title=title, backtitle=BACK_TITLE)
+    code, tag = d.radiolist(message,
+                            choices=choices,
+                            width=width,
+                            title=title,
+                            backtitle=BACK_TITLE)
 
     if code in [Dialog.CANCEL, Dialog.ESC]:
         return tape_mode
@@ -230,10 +249,23 @@ if __name__ == "__main__":
     code = None
 
     while True:
-        code, backup_mode, block_size, auto_eject, tape_mode, selected_dirs = backup_config_menu(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
+        (code,
+         backup_mode,
+         block_size,
+         auto_eject,
+         tape_mode,
+         selected_dirs) = backup_config_menu(backup_mode,
+                                             block_size,
+                                             auto_eject,
+                                             tape_mode,
+                                             selected_dirs)
 
         if code == Dialog.EXTRA:
-            confirmed = final_confirmation(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
+            confirmed = final_confirmation(backup_mode,
+                                           block_size,
+                                           auto_eject,
+                                           tape_mode,
+                                           selected_dirs)
 
             if confirmed:
                 start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs)
