@@ -1,6 +1,15 @@
+#!/usr/bin/env python
+#
+###############################################################################
+# CSave, a tape backup script
+# TUI implementation
+###############################################################################
+#
+
 import os
-from fs_utils import generate_dataset_list, make_directories_list
+from fs_utils import generate_dataset_list, get_lastdump_mtime, make_directories_list, update_lastdump_sentinel
 import subprocess
+import datetime
 from subprocess import Popen
 
 # Globals
@@ -26,7 +35,7 @@ def backup_config_menu(backup_mode, block_size, auto_eject, tape_mode, selected_
     ok_label     = "Edit Selected Option"
     cancel_label = "Exit"
     extra_label  = "Start Backup"
-    
+    _dataset_list, get_lastdum
     code, tag = d.menu(message,
                        choices=choices,
                        title=title,
@@ -96,11 +105,21 @@ def select_directories_to_back_up(selected_dirs):
 
     items   = [(dir, dir, True if dir in selected_dirs else False) for dir in make_directories_list()]
     
-    print(items)
-
     code, tags = d.buildlist(message, items=items, title=title, backtitle=BACK_TITLE, no_collapse=True)
 
     return tags if code == Dialog.OK else selected_dirs
+
+def confirm_lastdump_mtime():
+    sentinel_mtime    = get_lastdump_mtime()
+    sentinel_datetime = datetime.datetime.fromtimestamp(sentinel_mtime)
+    sentinel_timestr  = sentinel_datetime.strftime("%Y-%m-%d")
+    title             = "Last Backup Time"
+    message           = "Enter last backup time in YYYY-mm-dd format:"
+
+    _, string = d.inputbox(message, init=sentinel_timestr, title=title, backtitle=BACK_TITLE)
+
+    return string
+
 
 def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
     ### DEBUG
@@ -109,6 +128,47 @@ def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
     # Block until the tape is loaded
     load_tape()
 
+    if tape_mode == 'a':
+        with Popen(["mt", "eod"], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) as mt_proc:
+            tape_proc_follow(mt_proc)
+
+    lastdump_mtime = ""
+
+    if backup_mode.lower() == "differential":
+        lastdump_mtime = confirm_lastdump_mtime()
+    
+    already_backed_up = []
+
+    def render_already_backed_up():
+        return "Already backed up: \n" + '\n'.join(already_backed_up)
+    
+    try:
+        for dir in selected_dirs:
+            message = f"Backing up {dir}"
+            with Popen([
+                    "tar",
+                    "c",
+                    f"-b{block_size}",
+                    "--totals",
+                    "--one-file-system",
+                    "--exclude .zfs/",
+                    f"--newer-mtime {lastdump_mtime}" if len(lastdump_mtime) > 1 else "",
+                    "."
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                cwd=dir) as tar_proc:
+
+                # This will not block - a programbox would
+                d.progressbox(fd=tar_proc.stdout.fileno, text=render_already_backed_up + f"\n\n{message}", title=f"Backing up {dir}", backtitle=BACK_TITLE)
+
+        update_lastdump_sentinel()
+
+    finally:
+        if auto_eject:
+            with Popen(["mt", "offl"], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) as mt_proc:
+                tape_proc_follow(mt_proc)
+
 def load_tape():
     title   = "Load Tape"
     message = "Please insert a tape."
@@ -116,12 +176,7 @@ def load_tape():
     d.msgbox(message, title=title, backtitle=BACK_TITLE)
 
     with Popen(["mt", "status"], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE) as mt_proc:
-        mt_proc.wait()
-
-        if mt_proc.returncode != 0:
-            title = "Tape Error"
-            d.msgbox(mt_proc.stderr.read().decode(), title=title, backtitle=BACK_TITLE)
-            os._exit(mt_proc.returncode)
+        tape_proc_follow(mt_proc)
 
 def tape_mode_menu(tape_mode):
     title   = "Tape Mode"
@@ -155,6 +210,14 @@ def final_confirmation(backup_mode, block_size, auto_eject, tape_mode, selected_
     code, _ = d.form(message, elements, title=title, backtitle=BACK_TITLE)
 
     return code == Dialog.OK
+
+def tape_proc_follow(mt_proc):
+    mt_proc.wait()
+
+    if mt_proc.returncode != 0:
+        title = "Tape Error"
+        d.msgbox(mt_proc.stderr.read().decode(), title=title, backtitle=BACK_TITLE)
+        os._exit(mt_proc.returncode)
 
 if __name__ == "__main__":
     backup_mode       = "Full"                    # full or differential backup
