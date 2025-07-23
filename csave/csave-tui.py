@@ -173,7 +173,8 @@ def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
                               title=f"Backing up {dir}",
                               backtitle=BACK_TITLE)
 
-        update_lastdump_sentinel()
+        if backup_mode.lower() == 'full':
+            update_lastdump_sentinel()
 
     finally:
         if auto_eject:

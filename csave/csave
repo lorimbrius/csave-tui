@@ -128,7 +128,7 @@ final_confirmation () {
 }
 
 do_backup() {
-  if [ "$backup_mode" = "differential" ]; then
+  if [ "$backup_mode" == "differential" ]; then
     newer_mtime_arg="--newer-mtime ${lastdump_date}"
   else
     newer_mtime_arg=""
@@ -142,10 +142,12 @@ do_backup() {
     )
   done
 
-  # update lastdump sentinel
-  touch $LASTDUMP_SENTINEL
+  if [ "$backup_mode" == "full"]
+    # update lastdump sentinel
+    touch $LASTDUMP_SENTINEL
+  fi
 
-  if [ "$AUTO_EJECT" = "Y" ]; then
+  if [ "$AUTO_EJECT" == "Y" ]; then
     mt offl
   fi
 }
