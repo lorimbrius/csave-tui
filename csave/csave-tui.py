@@ -183,7 +183,7 @@ def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
                 tape_proc_follow(mt_proc)
                 
         title   = "Backup Complete"
-        message = "The following directories were backed up:\n" + render_already_backed_up()
+        message = "The following directories were backed up:\n" + '\n'.join(already_backed_up)
         
         d.scrollbox(message, title=title, backtitle=BACK_TITLE)
 
