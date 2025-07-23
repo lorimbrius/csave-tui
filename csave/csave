@@ -128,7 +128,7 @@ final_confirmation () {
 }
 
 do_backup() {
-  if [ "$backup_mode"  "differential" ]; then
+  if [ "$backup_mode" = "differential" ]; then
     newer_mtime_arg="--newer-mtime ${lastdump_date}"
   else
     newer_mtime_arg=""
