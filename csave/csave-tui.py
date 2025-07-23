@@ -7,6 +7,7 @@
 #
 
 import os
+import sys
 import subprocess
 import datetime
 from subprocess import Popen
@@ -175,6 +176,12 @@ def start_backup(backup_mode, block_size, auto_eject, tape_mode, selected_dirs):
 
         if backup_mode.lower() == 'full':
             update_lastdump_sentinel()
+            
+    except:
+        message = str(sys.exc_info()[0])
+        title   = "Tape Error"
+        
+        d.messagebox(message, title=title, backtitle=BACK_TITLE)
 
     finally:
         if auto_eject:
