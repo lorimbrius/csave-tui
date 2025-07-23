@@ -35,7 +35,6 @@ def backup_config_menu(backup_mode, block_size, auto_eject, tape_mode, selected_
     ok_label     = "Edit Selected Option"
     cancel_label = "Exit"
     extra_label  = "Start Backup"
-    _dataset_list, get_lastdum
     code, tag = d.menu(message,
                        choices=choices,
                        title=title,
