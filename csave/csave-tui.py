@@ -221,7 +221,7 @@ def final_confirmation(backup_mode, block_size, auto_eject, tape_mode, selected_
     title    = "Final Confirmation"
     message  = "Please review the following. Press OK to start backup or Cancel to return to backup menu."
     elements = [
-        # (label,         yl, xl, item,                                           yi, xi, field_length, input_length)
+        # (label,         yl, xl,  item,                                           yi, xi, field_length, input_length)
         ("Backup mode",   1,  1,   backup_mode,                                   1,  15,  0,            0),
         ("Block size",    2,  1,   str(block_size),                               2,  15,  0,            0),
         ("Auto eject",    3,  1,   "Yes" if auto_eject else "No",                 3,  15,  0,            0),
