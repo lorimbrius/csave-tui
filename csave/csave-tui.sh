@@ -339,6 +339,8 @@ select_tape_mode () {
     if [ $? -eq $DIALOG_OK ]; then
         tape_mode="$(echo $tag | tr '[:upper:]' '[:lower:]' | cut -c 1-1)"
     fi
+
+    backup_config_menu
 }
 
 final_confirmation () {
