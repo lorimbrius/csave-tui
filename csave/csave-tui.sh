@@ -61,7 +61,9 @@ backup_config_menu () {
         "Tape mode"              "$tape_mode_label"               \
         "Directories to back up" ""                               )
 
-    case $? in
+    rc=$?
+
+    case $rc in
         ($DIALOG_CANCEL|$DIALOG_ESC)
             exit 0
             ;;
