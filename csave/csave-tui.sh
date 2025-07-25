@@ -34,12 +34,12 @@ backup_config_menu () {
     local extra_label="Start Backup"
     local backup_mode_label="$(echo $backup_mode | awk '{print toupper(substr($0,1,1)) substr($0,2)}')" # capitalize first letter
 
-    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE" 
-        --menu "$message" 0 0 0                                   
-        "Backup mode"            "$backup_mode_label"             
-        "Block size"             "$block_size"                    
-        "Eject when finished"    "$auto_eject"                    
-        "Tape mode"              "$tape_mode"                     
+    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
+        --stdout --menu "$message" 0 0 0                          \
+        "Backup mode"            "$backup_mode_label"             \
+        "Block size"             "$block_size"                    \
+        "Eject when finished"    "$auto_eject"                    \
+        "Tape mode"              "$tape_mode"                     \
         "Directories to back up" ""                               )
 
     case $? in
@@ -94,9 +94,9 @@ select_backup_mode () {
             ;;
     esac
 
-    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE"                                                        
-        --radiolist "$message" 0 $width 0                                                                               
-        "Full"          "Back up all files, regardless of last change date"             $backup_mode_full               
+    local tag=$(dialog --stdout --title "$title" --backtitle "$BACK_TITLE"                                              \
+        --radiolist "$message" 0 $width 0                                                                               \
+        "Full"          "Back up all files, regardless of last change date"             $backup_mode_full               \
         "Differential"  "Only back up files that have changed since the last backup",   $backup_mode_differential       )
 
     if [ $? -eq DIALOG_OK ]; then
@@ -113,8 +113,8 @@ enter_block_size () {
     local title="Block Size"
     local message="Enter tape block size (default 512):"
 
-    local string=$(dialog --title "$title" --backtitle "$BACK_TITLE" 
-        --inputbox "$message" 0 0 $block_size)
+    local string=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
+        --stdout --inputbox "$message" 0 0 $block_size)
 
     if [ $? -eq DIALOG_OK ]; then
         block_size=$string
@@ -168,8 +168,8 @@ EOF
         items="$items dir dir $status"
     done
 
-    local tags=$(dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse 
-        --buildlist "$message" 0 0 0 $items)
+    local tags=$(dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse \
+        --stdout --buildlist "$message" 0 0 0 $items)
 
     if [ $? -eq DIALOG_OK ]; then
         selected_dirs="$tags"
@@ -182,7 +182,7 @@ confirm_lastdump_mtime () {
     local title="Last Backup Time"
     local message="Enter last backup time in YYYY-mm-dd format:"
 
-    lastdump_mtime=$(dialog --no-cancel --title "$title" 
+    lastdump_mtime=$(dialog --no-cancel --title "$title" --stdout \
          --backtitle "$BACK_TITLE" --inputbox "$message" 0 0 "$lastdump_mtime")
 }
 
@@ -221,7 +221,7 @@ start_backup () {
         rc=$?
 
         if [ $rc -ne 0 ]; then
-            dialog --title "Tape Error" --backtitle "$BACK_TITLE" 
+            dialog --title "Tape Error" --backtitle "$BACK_TITLE" \
                 --infobox "$mt_err" 0 0
 
             exit $rc
@@ -249,12 +249,12 @@ start_backup () {
                 --exclude .zfs/ $newer_mtime_arg . 2>&1 >&3 3>&-)
 
             export tarrc=$?
-        } 3>&1 | dialog --title "$message" --backtitle "$BACK_TITLE" 
-            --progressbox "$message" 0 0
+        } 3>&1 | dialog --title "$message" --backtitle "$BACK_TITLE" \
+            --stdout --progressbox "$message" 0 0
 
         # tar error handler
         if [ $tarrc -ne 0 ]; then
-            dialog --title "Tape Error" --backtitle "$BACK_TITLE" 
+            dialog --title "Tape Error" --backtitle "$BACK_TITLE" \
                 --infobox "$tar_err" 0 0
 
             exit $tarrc
@@ -276,7 +276,7 @@ start_backup () {
     local completed_title="Backup Complete"
     local completed_message="The following directories were backed up:\n${completed_message}"
 
-    dialog --title "$completed_title" --backtitle "$BACK_TITLE" 
+    dialog --title "$completed_title" --backtitle "$BACK_TITLE" \
         --msgbox "$completed_message" 0 0
 
     backup_config_menu
@@ -313,9 +313,9 @@ select_tape_mode () {
             ;;
     esac
 
-    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE"                  
-        --radiolist "$message" 0 $width 0                                          
-        "Append"    "Append this backup to the end of the tape" $append_status     
+    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE"                  \
+        --stdout --radiolist "$message" 0 $width 0                                 \
+        "Append"    "Append this backup to the end of the tape" $append_status     \
         "Overwrite" "Overwrite the tape with this backup"       $overwrite_status  )
 
     if [ $? -eq $DIALOG_OK ]; then
@@ -350,12 +350,12 @@ final_confirmation () {
         lastdump_mtime_line="'Last backup date' 6 1 $lastdump_mtime 6 15 0 0"
     fi
 
-    dialog --title "$title" --backtitle "$BACK_TITLE" --form "$message" 0 0 0 
-        "Backup mode"   1   1   $backup_mode_label  1   15  0   0             
-        "Block size"    2   1   $block_size         2   15  0   0             
-        "Auto eject"    3   1   $auto_eject_label   3   15  0   0             
-        "Tape mode"     4   1   $tape_mode_label    4   15  0   0             
-        "Selected dirs" 5   1   $selected_dirs      5   15  0   0             
+    dialog --title "$title" --backtitle "$BACK_TITLE" --form "$message" 0 0 0 \
+        "Backup mode"   1   1   $backup_mode_label  1   15  0   0             \
+        "Block size"    2   1   $block_size         2   15  0   0             \
+        "Auto eject"    3   1   $auto_eject_label   3   15  0   0             \
+        "Tape mode"     4   1   $tape_mode_label    4   15  0   0             \
+        "Selected dirs" 5   1   $selected_dirs      5   15  0   0             \
         "$lastdump_mtime_line"
 
     if [ $? -ne DIALOG_OK ]; then
