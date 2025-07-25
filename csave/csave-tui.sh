@@ -325,7 +325,7 @@ select_tape_mode () {
 final_confirmation () {
     local title="Final Confirmation"
     local message="Please review the following. Press OK to start backup or Cancel to return to backup menu."
-    local backup_mode_label="$(echo $backup_mode | | awk '{print toupper(substr($0,1,1)) substr($0,2)}')" # capitalize first letter
+    local backup_mode_label="$(echo $backup_mode | awk '{print toupper(substr($0,1,1)) substr($0,2)}')" # capitalize first letter
     
     case $auto_eject in
         'Y')
