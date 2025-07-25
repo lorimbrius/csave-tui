@@ -23,7 +23,7 @@ block_size=512     # Tape block size
 auto_eject='Y'     # Should the tape automatically eject when backup finishes
 tape_mode='o'      # (a)ppend or (o)verwrite
 selected_dirs=""   # List of directories to back up
-lastdump_mtime=`stat -f %Sm $LASTDUMP_SENTINEL`
+lastdump_mtime=$(stat -f %Sm $LASTDUMP_SENTINEL)
 
 # Functions
 backup_config_menu () {
@@ -33,13 +33,13 @@ backup_config_menu () {
     local cancel_label="Exit"
     local extra_label="Start Backup"
 
-    local tag=`dialog --title "$title" --backtitle "$BACK_TITLE" \
-        --menu "$message" 0 0 0                                  \
-        "Backup mode"            "$backup_mode"                  \
-        "Block size"             "$block_size"                   \
-        "Eject when finished"    "$auto_eject"                   \
-        "Tape mode"              "$tape_mode"                    \
-        "Directories to back up" ""                              `
+    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
+        --menu "$message" 0 0 0                                   \
+        "Backup mode"            "$backup_mode"                   \
+        "Block size"             "$block_size"                    \
+        "Eject when finished"    "$auto_eject"                    \
+        "Tape mode"              "$tape_mode"                     \
+        "Directories to back up" ""                               )
 
     case $? in
         $DIALOG_CANCEL|$DIALOG_ESC)
@@ -93,10 +93,10 @@ select_backup_mode () {
             ;;
     esac
 
-    local tag=`dialog --title "$title" --backtitle "$BACK_TITLE"                                                        \ 
+    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE"                                                       \ 
         --radiolist "$message" 0 $width 0                                                                               \
         "Full"          "Back up all files, regardless of last change date"             $backup_mode_full               \
-        "Differential"  "Only back up files that have changed since the last backup",   $backup_mode_differential       `
+        "Differential"  "Only back up files that have changed since the last backup",   $backup_mode_differential       )
 
     if [ $? -eq DIALOG_OK ]; then
         backup_mode="$(echo $tag | tr '[:upper:]' '[:lower:]')"
@@ -112,8 +112,8 @@ enter_block_size () {
     local title="Block Size"
     local message="Enter tape block size (default 512):"
 
-    local string=`dialog --title "$title" --backtitle "$BACK_TITLE" \
-        --inputbox "$message" 0 0 $block_size`
+    local string=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
+        --inputbox "$message" 0 0 $block_size)
 
     if [ $? -eq DIALOG_OK ]; then
         block_size=$string
@@ -167,8 +167,8 @@ EOF
         items="$items dir dir $status"
     done
 
-    local tags=`dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse \
-        --buildlist "$message" 0 0 0 $items`
+    local tags=$(dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse \
+        --buildlist "$message" 0 0 0 $items)
 
     if [ $? -eq DIALOG_OK ]; then
         selected_dirs="$tags"
@@ -181,8 +181,8 @@ confirm_lastdump_mtime () {
     local title="Last Backup Time"
     local message="Enter last backup time in YYYY-mm-dd format:"
 
-    lastdump_mtime=`dialog --no-cancel --title "$title" \
-         --backtitle "$BACK_TITLE" --inputbox "$message" 0 0 "$lastdump_mtime"`
+    lastdump_mtime=$(dialog --no-cancel --title "$title" \
+         --backtitle "$BACK_TITLE" --inputbox "$message" 0 0 "$lastdump_mtime")
 }
 
 assemble_backup_message () {
@@ -239,7 +239,7 @@ start_backup () {
     ( # Subshell to prevent the script's wd from becoming the directory we're 
       # backing up.
         cd "$dir"
-        message=`assemble_backup_message "$dir"`
+        message=$(assemble_backup_message "$dir")
 
         # Shell substitution to capture tar's error stream in a variable, send
         # its output to dialog, and preserve its exit code.
@@ -270,7 +270,7 @@ start_backup () {
         touch "$LASTDUMP_SENTINEL"
     fi
 
-    completed_message=`assemble_completed_message`
+    completed_message=$(assemble_completed_message)
 
     local completed_title="Backup Complete"
     local completed_message="The following directories were backed up:\n${completed_message}"
@@ -312,10 +312,10 @@ select_tape_mode () {
             ;;
     esac
 
-    local tag=`dialog --title "$title" --backtitle "$BACK_TITLE"                  \
-        --radiolist "$message" 0 $width 0                                         \
-        "Append"    "Append this backup to the end of the tape" $append_status    \
-        "Overwrite" "Overwrite the tape with this backup"       $overwrite_status `
+    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE"                  \
+        --radiolist "$message" 0 $width 0                                          \
+        "Append"    "Append this backup to the end of the tape" $append_status     \
+        "Overwrite" "Overwrite the tape with this backup"       $overwrite_status  )
 
     if [ $? -eq $DIALOG_OK ]; then
         tape_mode="$(echo $tag | tr '[:upper:]' '[:lower:]' | cut -c 1-1)"
