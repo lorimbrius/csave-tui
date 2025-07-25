@@ -362,5 +362,4 @@ final_confirmation () {
     fi
 }
 
-generate_dataset_list
 backup_config_menu
