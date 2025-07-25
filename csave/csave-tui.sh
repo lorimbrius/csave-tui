@@ -53,7 +53,8 @@ backup_config_menu () {
     esac
 
     local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
-        --stdout --menu "$message" 0 0 0                          \
+        --stdout --extra-button --extra-label "$extra_label"      \
+        --menu "$message" 0 0 0                                   \
         "Backup mode"            "$backup_mode_label"             \
         "Block size"             "$block_size"                    \
         "Eject when finished"    "$auto_eject_label"              \
