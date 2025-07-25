@@ -56,12 +56,12 @@ backup_config_menu () {
         --stdout --menu "$message" 0 0 0                          \
         "Backup mode"            "$backup_mode_label"             \
         "Block size"             "$block_size"                    \
-        "Eject when finished"    "$auto_eject_label"                    \
+        "Eject when finished"    "$auto_eject_label"              \
         "Tape mode"              "$tape_mode_label"               \
         "Directories to back up" ""                               )
 
     case $? in
-        $DIALOG_CANCEL|$DIALOG_ESC)
+        ($DIALOG_CANCEL|$DIALOG_ESC)
             exit 0
             ;;
         $DIALOG_OK)
