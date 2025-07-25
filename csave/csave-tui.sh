@@ -61,6 +61,8 @@ backup_config_menu () {
         "Tape mode"              "$tape_mode_label"               \
         "Directories to back up" ""                               )
 
+    echo $?
+    
     case $? in
         ($DIALOG_CANCEL|$DIALOG_ESC)
             exit 0
@@ -80,7 +82,7 @@ backup_config_menu () {
 dispatch_choice () {
     case $1 in
         "Backup mode")
-            select_backup_mode
+           select_backup_mode
             ;;
         "Block size")
             enter_block_size
@@ -121,9 +123,6 @@ select_backup_mode () {
     if [ $? -eq $DIALOG_OK ]; then
         backup_mode="$(echo $tag | tr '[:upper:]' '[:lower:]')"
     fi
-
-    unset backup_mode_full
-    unset backup_mode_differential
 
     backup_config_menu
 }
@@ -278,8 +277,6 @@ start_backup () {
 
             exit $tarrc
         fi
-
-        unset tarrc
 
         already_backed_up="$already_backed_up $dir"
     )
