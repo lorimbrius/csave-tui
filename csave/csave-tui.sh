@@ -33,7 +33,7 @@ backup_config_menu () {
     local cancel_label="Exit"
     local extra_label="Start Backup"
 
-    local tag=`dialog --title "$title" "$message" --backtitle "$BACK_TITLE" --menu 0 0 0 \
+    local tag=`dialog --title "$title" --backtitle "$BACK_TITLE" --menu "$message" 0 0 0 \
         "Backup mode"            "$backup_mode"                                          \
         "Block size"             "$block_size"                                           \
         "Eject when finished"    "$auto_eject"                                           \
@@ -92,7 +92,7 @@ select_backup_mode () {
             ;;
     esac
 
-    local tag=`dialog --title "$title" --backtitle= "$BACK_TITLE" --radiolist "$message" 0 $width 0                     \
+    local tag=`dialog --title "$title" --backtitle "$BACK_TITLE" --radiolist "$message" 0 $width 0                     \
         "Full"          "Back up all files, regardless of last change date"             $backup_mode_full               \
         "Differential"  "Only back up files that have changed since the last backup",   $backup_mode_differential       `
 
@@ -110,7 +110,7 @@ enter_block_size () {
     local title="Block Size"
     local message="Enter tape block size (default 512):"
 
-    local string=`dialog --title "$title" --backtitle="$BACK_TITLE" --inputbox "$message" 0 0 $block_size`
+    local string=`dialog --title "$title" --backtitle "$BACK_TITLE" --inputbox "$message" 0 0 $block_size`
 
     if [ $? -eq DIALOG_OK ]; then
         block_size=$string
@@ -164,7 +164,7 @@ EOF
         items="$items dir dir $status"
     done
 
-    local tags=`dialog --title "$title" --backtitle="$BACK_TITLE" --no-collapse \
+    local tags=`dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse \
         --buildlist "$message" 0 0 0 $items`
 
     if [ $? -eq DIALOG_OK ]; then
@@ -178,7 +178,7 @@ confirm_lastdump_mtime () {
     local title="Last Backup Time"
     local message="Enter last backup time in YYYY-mm-dd format:"
 
-    lastdump_mtime=`dialog --no-cancel --title "$title" --backtitle="$BACK_TITLE" --inputbox "$message" 0 0 "$lastdump_mtime"`
+    lastdump_mtime=`dialog --no-cancel --title "$title" --backtitle "$BACK_TITLE" --inputbox "$message" 0 0 "$lastdump_mtime"`
 }
 
 start_backup () {
@@ -191,7 +191,7 @@ start_backup () {
         rc=$?
 
         if [ $rc -ne 0 ]; then
-            dialog --title "Tape Error" --backtitle "$BACK_TITLE" "$mterr" 0 0
+            dialog --title "Tape Error" --backtitle "$BACK_TITLE" --infobox "$mterr" 0 0
             exit $rc
         fi
     fi
