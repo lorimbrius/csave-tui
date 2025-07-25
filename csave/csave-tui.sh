@@ -117,7 +117,7 @@ select_backup_mode () {
         "Full"          "Back up all files, regardless of last change date"             $backup_mode_full               \
         "Differential"  "Only back up files that have changed since the last backup",   $backup_mode_differential       )
 
-    if [ $? -eq DIALOG_OK ]; then
+    if [ $? -eq $DIALOG_OK ]; then
         backup_mode="$(echo $tag | tr '[:upper:]' '[:lower:]')"
     fi
 
@@ -134,7 +134,7 @@ enter_block_size () {
     local string=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
         --stdout --inputbox "$message" 0 0 $block_size)
 
-    if [ $? -eq DIALOG_OK ]; then
+    if [ $? -eq $DIALOG_OK ]; then
         block_size=$string
     fi
 
@@ -189,7 +189,7 @@ EOF
     local tags=$(dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse \
         --stdout --buildlist "$message" 0 0 0 $items)
 
-    if [ $? -eq DIALOG_OK ]; then
+    if [ $? -eq $DIALOG_OK ]; then
         selected_dirs="$tags"
     fi
 
