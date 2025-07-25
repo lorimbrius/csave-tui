@@ -126,7 +126,7 @@ def confirm_lastdump_mtime():
     title             = "Last Backup Time"
     message           = "Enter last backup time in YYYY-mm-dd format:"
 
-    _, string = d.inputbox(message, init=sentinel_timestr, title=title, backtitle=BACK_TITLE)
+    _, string = d.inputbox(message, init=sentinel_timestr, title=title, backtitle=BACK_TITLE, no_cancel=True)
 
     return string
 
