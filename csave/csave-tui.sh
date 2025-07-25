@@ -176,7 +176,7 @@ EOF
     local items=""
 
     for dir in "$DATASET_LIST"; do
-        grep "$dir" "$selected_dirs"
+        echo "$selected_dirs" | grep "$dir"
 
         if [ $? -eq 0 ]; then
             status=ON
