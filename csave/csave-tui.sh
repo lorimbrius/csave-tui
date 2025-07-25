@@ -183,7 +183,7 @@ EOF
             status=OFF
         fi
 
-        items="$items dir dir $status"
+        items="$items $dir $dir $status"
     done
 
     local tags=$(dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse \
