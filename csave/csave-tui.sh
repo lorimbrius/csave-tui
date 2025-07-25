@@ -148,10 +148,10 @@ select_auto_eject () {
     dialog --title "$title" --backtitle "$BACK_TITLE" --yesno "$message" 0 0
 
     case $? in
-        DIALOG_OK)
+        $DIALOG_OK)
             auto_eject='Y'
             ;;
-        DIALOG_CANCEL)
+        $DIALOG_CANCEL)
             auto_eject='N'
             ;;
     esac
@@ -376,7 +376,7 @@ final_confirmation () {
         "Selected dirs" 5   1   $selected_dirs      5   15  0   0             \
         "$lastdump_mtime_line"
 
-    if [ $? -ne DIALOG_OK ]; then
+    if [ $? -ne $DIALOG_OK ]; then
         backup_config_menu
     fi
 }
