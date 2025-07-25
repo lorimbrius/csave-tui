@@ -34,12 +34,30 @@ backup_config_menu () {
     local extra_label="Start Backup"
     local backup_mode_label="$(echo $backup_mode | awk '{print toupper(substr($0,1,1)) substr($0,2)}')" # capitalize first letter
 
+    case $auto_eject in
+        'Y')
+            auto_eject_label=Yes
+            ;;
+        'N')
+            auto_eject_label=No
+            ;;
+    esac
+
+    case $tape_mode in
+        'a')
+            tape_mode_label="Append"
+            ;;
+        'o')
+            tape_mode_label="Overwrite"
+            ;;
+    esac
+
     local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
         --stdout --menu "$message" 0 0 0                          \
         "Backup mode"            "$backup_mode_label"             \
         "Block size"             "$block_size"                    \
-        "Eject when finished"    "$auto_eject"                    \
-        "Tape mode"              "$tape_mode"                     \
+        "Eject when finished"    "$auto_eject_label"                    \
+        "Tape mode"              "$tape_mode_label"               \
         "Directories to back up" ""                               )
 
     case $? in
