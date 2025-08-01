@@ -189,7 +189,6 @@ EOF
             status=OFF
         fi
 
-        echo "$items"
         items="$items $dir $dir $status"
     done
 
