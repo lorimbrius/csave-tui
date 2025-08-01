@@ -217,7 +217,7 @@ assemble_backup_message () {
     if [ ${#already_backed_up} -gt 1 ]; then
         message="$already_backed_up_header"
 
-        for dir in "$already_backed_up"; do
+        for dir in $already_backed_up; do
             message="${message}${dir}\n"
         done
     fi
@@ -228,7 +228,7 @@ assemble_backup_message () {
 }
 
 assemble_completed_message () {
-    for dir in "$already_backed_up"; do
+    for dir in $already_backed_up; do
         completed_message="${completed_message}\n${dir}"
     done
 
@@ -260,7 +260,7 @@ start_backup () {
     final_confirmation
 
     # actually start backing up
-    for dir in "$selected_dirs"; do
+    for dir in $selected_dirs; do
     ( # Subshell to prevent the script's wd from becoming the directory we're 
       # backing up.
         cd "$dir"
