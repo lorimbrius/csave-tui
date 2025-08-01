@@ -124,7 +124,7 @@ select_backup_mode () {
     tag=$(dialog --stdout --title "$title" --backtitle "$BACK_TITLE"                                                    \
         --radiolist "$message" 0 $width 0                                                                               \
         "Full"          "Back up all files, regardless of last change date"             $backup_mode_full               \
-        "Differential"  "Only back up files that have changed since the last backup",   $backup_mode_differential       )
+        "Differential"  "Only back up files that have changed since the last backup"    $backup_mode_differential       )
 
     if [ $? -eq $DIALOG_OK ]; then
         backup_mode="$(echo $tag | tr '[:upper:]' '[:lower:]')"
