@@ -15,7 +15,7 @@ DIALOG_EXTRA=3     # Dialog's extra button
 DIALOG_HELP=2      # Dialog's Help button
 DIALOG_TIMEOUT=5   # Dialog's timeout code
 DIALOG_OK=0        # Dialog's OK button
-DATASET_LIST=$(cat < /usr/local/etc/dumplist)
+DATASET_LIST=$(tr '\n' ' ' < /usr/local/etc/dumplist)
 LASTDUMP_SENTINEL="/var/preserve/lastdump"
 
 backup_mode="full" # Full vs. differential backup
@@ -23,7 +23,15 @@ block_size=512     # Tape block size
 auto_eject='Y'     # Should the tape automatically eject when backup finishes
 tape_mode='o'      # (a)ppend or (o)verwrite
 selected_dirs=""   # List of directories to back up
-lastdump_mtime=$(stat -f %Sm $LASTDUMP_SENTINEL)
+
+# BSD vs. Linux difference in stat(1) arguments
+if [ $(uname) = "Linux" ]; then
+    lastdump_mtime=$(stat -c %Sm "$LASTDUMP_SENTINEL")
+else
+    # BSD stat(1) prints out ISO 8601 dates when asked for a string
+    lastdump_mtime=$(stat -f %Um "$LASTDUMP_SENTINEL")
+    lastdump_mtime=$(date -f%s -j $lastdump_mtime +%F)
+fi
 
 # Functions
 backup_config_menu () {
@@ -52,7 +60,7 @@ backup_config_menu () {
             ;;
     esac
 
-    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
+    tag=$(dialog --title "$title" --backtitle "$BACK_TITLE"       \
         --stdout --extra-button --extra-label "$extra_label"      \
         --menu "$message" 0 0 0                                   \
         "Backup mode"            "$backup_mode_label"             \
@@ -61,9 +69,7 @@ backup_config_menu () {
         "Tape mode"              "$tape_mode_label"               \
         "Directories to back up" ""                               )
 
-    rc=$?
-
-    case $rc in
+    case $? in
         ($DIALOG_CANCEL|$DIALOG_ESC)
             exit 0
             ;;
@@ -115,7 +121,7 @@ select_backup_mode () {
             ;;
     esac
 
-    local tag=$(dialog --stdout --title "$title" --backtitle "$BACK_TITLE"                                              \
+    tag=$(dialog --stdout --title "$title" --backtitle "$BACK_TITLE"                                                    \
         --radiolist "$message" 0 $width 0                                                                               \
         "Full"          "Back up all files, regardless of last change date"             $backup_mode_full               \
         "Differential"  "Only back up files that have changed since the last backup",   $backup_mode_differential       )
@@ -131,7 +137,7 @@ enter_block_size () {
     local title="Block Size"
     local message="Enter tape block size (default 512):"
 
-    local string=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
+    string=$(dialog --title "$title" --backtitle "$BACK_TITLE" \
         --stdout --inputbox "$message" 0 0 $block_size)
 
     if [ $? -eq $DIALOG_OK ]; then
@@ -161,7 +167,7 @@ select_auto_eject () {
 
 select_directories () {
     local title="Select Directories"
-    local message=$(cat <<EOF
+    message=$(cat <<EOF
 Select directories to back up:
 
 Keys: SPACE     to select or deselect the highlighted item
@@ -172,10 +178,10 @@ Keys: SPACE     to select or deselect the highlighted item
 EOF
     )
 
-    local items=""
+    items=""
 
-    for dir in "$DATASET_LIST"; do
-        echo "$selected_dirs" | grep "$dir"
+    for dir in $DATASET_LIST; do
+        echo "$selected_dirs" | grep "$dir" >/dev/null
 
         if [ $? -eq 0 ]; then
             status=ON
@@ -183,10 +189,11 @@ EOF
             status=OFF
         fi
 
+        echo "$items"
         items="$items $dir $dir $status"
     done
 
-    local tags=$(dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse \
+    tags=$(dialog --title "$title" --backtitle "$BACK_TITLE" --no-collapse \
         --stdout --buildlist "$message" 0 0 0 $items)
 
     if [ $? -eq $DIALOG_OK ]; then
@@ -304,8 +311,8 @@ load_tape () {
 
     dialog --title "$title" --backtitle "$BACK_TITLE" --msgbox "$message" 0 0
 
-    local mt_err=$(mt status 2>&1 > /dev/null)
-    local rc=$?
+    mt_err=$(mt status 2>&1 > /dev/null)
+    rc=$?
 
     if [ $rc -ne 0 ]; then
         dialog --title "Tape Error" --backtitle "$BACK_TITLE" --infobox "$mt_err" 0 0
@@ -329,7 +336,7 @@ select_tape_mode () {
             ;;
     esac
 
-    local tag=$(dialog --title "$title" --backtitle "$BACK_TITLE"                  \
+    tag=$(dialog --title "$title" --backtitle "$BACK_TITLE"                        \
         --stdout --radiolist "$message" 0 $width 0                                 \
         "Append"    "Append this backup to the end of the tape" $append_status     \
         "Overwrite" "Overwrite the tape with this backup"       $overwrite_status  )
